@@ -12,8 +12,8 @@ from setuptools import setup, find_packages, Extension
 from setuptools import Extension, find_packages, setup
 
 
-if sys.version_info < (3, 6):
-    sys.exit("Sorry, Python >= 3.6 is required for fairseq.")
+if sys.version_info < (3, 12):
+    sys.exit("Sorry, Python >= 3.12 is required for fairseq.")
 
 
 def write_version_py():
@@ -169,19 +169,17 @@ def do_setup(package_data):
         # url="https://github.com/pytorch/fairseq",
         classifiers=[
             "Intended Audience :: Science/Research",
-            "Programming Language :: Python :: 3.6",
-            "Programming Language :: Python :: 3.7",
-            "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
+            "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
             "Topic :: Scientific/Engineering :: Artificial Intelligence",
         ],
         long_description=readme,
         long_description_content_type="text/markdown",
         setup_requires=[
             "cython",
-            'numpy<1.20.0; python_version<"3.7"',
-            'numpy; python_version>="3.7"',
-            "setuptools>=18.0",
+            "numpy",
+            "setuptools>=65.0",
         ],
         install_requires=[
             "cffi",

@@ -45,12 +45,63 @@ from transformers.modeling_outputs import (
     SequenceClassifierOutput,
     TokenClassifierOutput,
 )
-from transformers.modeling_utils import (
-    PreTrainedModel,
-    apply_chunking_to_forward,
-    find_pruneable_heads_and_indices,
-    prune_linear_layer,
-)
+from transformers.modeling_utils import PreTrainedModel
+
+# These functions were moved to pytorch_utils in newer transformers versions
+try:
+    from transformers.modeling_utils import (
+        find_pruneable_heads_and_indices,
+        prune_linear_layer,
+    )
+except ImportError:
+    from transformers.pytorch_utils import (
+        find_pruneable_heads_and_indices,
+        prune_linear_layer,
+    )
+
+# apply_chunking_to_forward was removed in newer transformers versions
+# Implementing it locally for backward compatibility
+def apply_chunking_to_forward(forward_fn, chunk_size, chunk_dim, *input_tensors):
+    """
+    Apply chunking to a forward function for memory efficiency.
+
+    This function applies the forward function in chunks along the specified dimension,
+    which is useful for processing large sequences in a memory-efficient manner.
+
+    Args:
+        forward_fn: The forward function to apply
+        chunk_size: Size of chunks (0 means no chunking)
+        chunk_dim: Dimension along which to chunk
+        *input_tensors: Input tensors to process
+
+    Returns:
+        Concatenated output from all chunks
+    """
+    if chunk_size > 0:
+        tensor_shape = input_tensors[0].shape[chunk_dim]
+        assert all(
+            input_tensor.shape[chunk_dim] == tensor_shape for input_tensor in input_tensors
+        ), "All input tensors must have the same size in the chunk dimension"
+
+        num_chunks = (tensor_shape + chunk_size - 1) // chunk_size
+        output_chunks = []
+
+        for chunk_idx in range(num_chunks):
+            start_idx = chunk_idx * chunk_size
+            end_idx = min((chunk_idx + 1) * chunk_size, tensor_shape)
+
+            chunk_inputs = [
+                input_tensor.narrow(chunk_dim, start_idx, end_idx - start_idx)
+                for input_tensor in input_tensors
+            ]
+
+            output_chunk = forward_fn(*chunk_inputs)
+            output_chunks.append(output_chunk)
+
+        return torch.cat(output_chunks, dim=chunk_dim)
+    else:
+        return forward_fn(*input_tensors)
+
 from transformers.models.bert.configuration_bert import BertConfig
 from transformers.utils import logging
 
