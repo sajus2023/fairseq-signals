@@ -77,7 +77,8 @@ def main(args):
             else:
                 table[patient_id] = os.path.join(dir_path, fname)
     
-    filtered = {k: v for k, v in table.items() if len(v.split(',')) >= 2}
+    #filtered = {k: v for k, v in table.items() if len(v.split(',')) >= 2}
+    filtered = {k: v for k, v in table.items() if len(v.split(',')) >= 1} # Fix to generate .mat files for every ecg_id
 
     np.random.seed(args.seed)
 
